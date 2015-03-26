@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.IO.IsolatedStorage;
-using System.Windows;
 using System.Windows.Media.Imaging;
 using Windows.Storage;
 
@@ -9,57 +8,58 @@ namespace StoreMediaLib
 {
     public static class Images
     {
-        public static void SaveImage(BitmapImage imageToBeSaved, string folderName, string fileName)
+        public static void SaveImage(Stream imageToBeSaved, string folderName, string fileName)
         {
-            IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication();
-
-            if (!local.DirectoryExists(folderName))
-                local.CreateDirectory(folderName);            
-
-            using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            using (IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication())
             {
-                var wb = new WriteableBitmap(imageToBeSaved);
-
-                using (var isoFileStream = isoStore.CreateFile(folderName + "\\" + fileName + ".jpg"))
-                    wb.SaveJpeg(isoFileStream, wb.PixelWidth, wb.PixelHeight, 0, 100);
-            }
+                if(!local.DirectoryExists(folderName))
+                    local.CreateDirectory(folderName);
+                SaveImage(imageToBeSaved, folderName + "\\" + fileName);    
+            }            
         }
 
-        public static List<BitmapImage> LoadImages()
+        public static void SaveImage(Stream imageToBeSaved, string fileName)
         {
-            List<BitmapImage> retreivedImages = new List<BitmapImage>();
-
-            foreach (var dir in IsolatedStorageFile.GetUserStoreForApplication().GetDirectoryNames())
-                retreivedImages.AddRange(LoadParticularImages(dir));
-
-            return retreivedImages;
-        }
-
-        public static List<BitmapImage> LoadParticularImages(string folderName)
-        {
-
-            List<BitmapImage> retreivedImages = new List<BitmapImage>();
-
-            try
-            {
-                foreach (var file in Directory.GetFiles(ApplicationData.Current.LocalFolder.Path + "\\" + folderName))
+            using (IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication())
+            {                
+                using (IsolatedStorageFileStream isoFileStream = local.CreateFile(fileName + ".jpg"))
                 {
-                    using (var isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+                    byte[] readBuffer = new byte[4096];
+                    int bytesRead = -1;
+
+                    while ((bytesRead = imageToBeSaved.Read(readBuffer, 0, readBuffer.Length)) > 0)
                     {
-                        using (var isoFileStream = isoStore.OpenFile(file, FileMode.Open))
-                        {
-                            var retreivedImage = new BitmapImage();
-                            retreivedImage.SetSource(isoFileStream);
-                            retreivedImages.Add(retreivedImage);
-                        }
+                        isoFileStream.Write(readBuffer, 0, bytesRead);
                     }
+
                 }
             }
-            catch (DirectoryNotFoundException)
+
+            imageToBeSaved.Close();
+        }
+
+        public static BitmapImage LoadImage(string fileName)
+        {
+            BitmapImage bmpImage = new BitmapImage();
+
+            using (IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication())
             {
-                MessageBox.Show("Folder not exist");
-                return new List<BitmapImage>();
-            }
+                if(local.FileExists(fileName))
+                    using (IsolatedStorageFileStream file = local.OpenFile(fileName, FileMode.Open))
+                    {                        
+                        bmpImage.SetSource(file);                        
+                    }
+            }            
+
+            return bmpImage;
+        }
+
+        public static List<BitmapImage> LoadImagesFromFolder(string folderName)
+        {
+            List<BitmapImage> retreivedImages = new List<BitmapImage>();
+
+            foreach (var file in Directory.GetFiles(ApplicationData.Current.LocalFolder.Path + "\\" + folderName))            
+                retreivedImages.Add(LoadImage(file));
 
             return retreivedImages;
         }
