@@ -8,6 +8,12 @@ namespace StoreMediaLib
 {
     public static class Images
     {
+        /// <summary>
+        /// Saves image stream in the specified folder.
+        /// </summary>
+        /// <param name="imageToBeSaved">Represents stream with image.</param>
+        /// <param name="folderName">Desireble folder name.</param>
+        /// <param name="fileName">Name of the file to create.</param>
         public static void SaveImage(Stream imageToBeSaved, string folderName, string fileName)
         {
             using (IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication())
@@ -15,10 +21,15 @@ namespace StoreMediaLib
                 if(!local.DirectoryExists(folderName))
                     local.CreateDirectory(folderName);
                 SaveImage(imageToBeSaved, folderName + "\\" + fileName);    
-            }            
+            }                        
         }
 
-        public static void SaveImage(Stream imageToBeSaved, string fileName)
+        /// <summary>        
+        /// Saves stream with image to the specified path.
+        /// </summary>
+        /// <param name="imageToBeSaved">Represents stream with image.</param>
+        /// <param name="fileName">The relative path of the file to create.</param>
+        private static void SaveImage(Stream imageToBeSaved, string fileName)
         {
             using (IsolatedStorageFile local = IsolatedStorageFile.GetUserStoreForApplication())
             {                
@@ -33,11 +44,14 @@ namespace StoreMediaLib
                     }
 
                 }
-            }
-
-            imageToBeSaved.Close();
+            }            
         }
 
+        /// <summary>
+        /// Loads image by relative path.
+        /// </summary>
+        /// <param name="fileName">Relative path to the file in isolated storage.</param>
+        /// <returns>Image as a Bitmap object.</returns>
         public static BitmapImage LoadImage(string fileName)
         {
             BitmapImage bmpImage = new BitmapImage();
@@ -54,6 +68,11 @@ namespace StoreMediaLib
             return bmpImage;
         }
 
+        /// <summary>
+        /// Loads all images in directory by relative path.
+        /// </summary>
+        /// <param name="folderName">Relative path to the folder</param>
+        /// <returns>Collection of Bitmap object.</returns>
         public static List<BitmapImage> LoadImagesFromFolder(string folderName)
         {
             List<BitmapImage> retreivedImages = new List<BitmapImage>();
