@@ -6,6 +6,9 @@ using Windows.Storage;
 
 namespace StoreMediaLib
 {
+    /// <summary>
+    /// Provides methods to save and load images in isolated storage.
+    /// </summary>
     public static class Images
     {
         /// <summary>
